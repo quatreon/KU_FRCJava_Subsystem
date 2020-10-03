@@ -65,12 +65,12 @@ public class OI {
         /*Arm Manual Control*/
 
         //Manual arm control, only run this if PID is disabled
-        if(!arm.isArmPIDEnabld()) {
+        if(!arm.isArmPIDEnabled()) {
             if(operator_control.getRawAxis(1) > 0.1 || operator_control.getRawAxis(1) < -0.1){
-                arm.setManualArmSpeed(operator_control.getRawAxis(1)*.5);
+                arm.setArmSpeed(operator_control.getRawAxis(1)*.5);
             }
             else{
-                arm.setManualArmSpeed(0);  
+                arm.setArmSpeed(0);  
             }
         }
 

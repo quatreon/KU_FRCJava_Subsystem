@@ -7,10 +7,8 @@
 
 package frc.robot.subsystem;
 import frc.robot.Constants;
-
 import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.PIDController;
-import edu.wpi.first.wpilibj.PIDSourceType;
+import edu.wpi.first.wpilibj.controller.PIDController;
 import edu.wpi.first.wpilibj.PWMVictorSPX;
 import edu.wpi.first.wpilibj.SpeedControllerGroup;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -28,6 +26,8 @@ public class Arm {
     private PIDController aPidController;
 
     private static Arm m_Instance;
+    private boolean isArmPIDEnabled = false;
+    private double armSetPoint;
 
     private void setup(){
         //initialize the motor
@@ -38,16 +38,10 @@ public class Arm {
         //initialize the Encorder
         eArm = new Encoder(Constants.eArm1, Constants.eArm2, true, Encoder.EncodingType.k4X);
         eArm.reset();
-        eArm.setPIDSourceType(PIDSourceType.kDisplacement); //position or rate
         eArm.setDistancePerPulse(360.0/1024.0); //set measurment to degrees - 360 degrees/1024 encoder ticks 
 
         //initialize PID 
-        aPidController = new PIDController(Constants.aP, Constants.aI, Constants.aD, eArm, mArm); //PID values, sensor value, output motors
-        aPidController.setOutputRange(-0.5, 0.25);  //limit min and max speed of motors
-        aPidController.setInputRange(-160, 0);      //limit motion range from 0 to -160 degrees
-
-        //start with PID disable
-        aPidController.disable();
+        aPidController = new PIDController(Constants.aP, Constants.aI, Constants.aD); //PID values, sensor value, output motors
     }
 
     private Arm(){
@@ -61,30 +55,34 @@ public class Arm {
         return m_Instance;
     }
 
-    //set manual arm speed
-    public void setManualArmSpeed(double speed){ 
+    //set arm speed
+    public void setArmSpeed(double speed){ 
         mArm.set(speed); 
     }
 
     //Set arm position using PID
-    public void setArmPosition(double Distance){
-        aPidController.enable();
-        aPidController.setSetpoint(Distance);
-    }
-
-    //check Arm PID is Enable
-    public boolean isArmPIDEnabld(){
-        return aPidController.isEnabled();
-    }
-
-    //disable Arm PID
-    public void disableArmPID(){
-        if(aPidController.isEnabled()) aPidController.disable();
+    public void setArmPosition(double distance){
+        enableArmPID();
+        armSetPoint = distance;
     }
 
     public void adjustArmPosition(double adjust){
-        double newPosition = aPidController.getSetpoint() + adjust;
-        aPidController.setSetpoint(newPosition);
+        armSetPoint = armSetPoint + adjust;
+    }
+
+    //enable PID
+    public void enableArmPID(){
+        isArmPIDEnabled = true;
+    }
+
+    //disable PID
+    public void disableArmPID(){
+        isArmPIDEnabled = false;
+    }
+
+    //check if PID is enabled
+    public boolean isArmPIDEnabled(){
+        return isArmPIDEnabled;
     }
 
     //reset the encoder
@@ -97,15 +95,23 @@ public class Arm {
         by setting motor to minimum power */
     public void defenseMode(boolean mSwitch){
         if(mSwitch){
-            setArmPosition(0);
-            disableArmPID();
-            setManualArmSpeed(0.05);
+            if(eArm.getDistance() > 5){
+                setArmPosition(0);
+            }else{
+                setArmSpeed(0.05);
+            }
         }
     }
 
     public void update(){
         SmartDashboard.putNumber("ArmEncoder Distance", eArm.getDistance());
-        SmartDashboard.putNumber("ArmEncoder Rate", eArm.getRate());      
+        SmartDashboard.putNumber("ArmEncoder Rate", eArm.getRate());     
+    
+        //ARM PID 
+        if(isArmPIDEnabled()){
+            double pid_output = aPidController.calculate(eArm.getDistance(), armSetPoint);
+            setArmSpeed(pid_output);
+        }
     }
 
 

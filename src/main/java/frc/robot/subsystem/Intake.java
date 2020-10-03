@@ -7,8 +7,6 @@
 
 package frc.robot.subsystem;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.PWMVictorSPX;
 import frc.robot.Constants;

@@ -68,10 +68,12 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotPeriodic() {
-    //If robot is disable, STOP the arm PID (otherwise it will go full speed when you re-enable)
-    if(DriverStation.getInstance().isDisabled()){
-      arm.disableArmPID();
-    }
+
+  }
+  
+  @Override
+  public void disabledPeriodic() {
+    arm.disableArmPID();
   }
 
   /**
